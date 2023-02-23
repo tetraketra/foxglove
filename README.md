@@ -1,5 +1,3 @@
-__TODO: logo goes here lmao__
-
 ### 1. What is Foxglove?
 Foxglove is an aesthetic and highly-configurable python-based terminal rendering support library with an accompanying custom frame definition language. Consider this a personalized alternative to [Urwid](https://urwid.org) with features customized to my use cases only.
 
