@@ -11,7 +11,7 @@ ted during runtime. The following characters have special meanings:
    - `a` and `b` soft cut. Printing `Hello world!` to `aaaaaa` yields `Hel...` by default.
    - Multi-line frames text-wrap by default. This can be altered case-by-case in code.
  - `C`|`c` is an alternative to the `AaBb` format for a multi-line list region.
- - `L`|`R`|`U`|`D` define single-character repetitions for expanding frames to variable widths.
+ - `L`|`R`|`U`|`D` define single-character repetitions for expanding frames to variable dimensions.
    - Expansions are Bouquet-only. They do not repeat printed text.
    - `⊨=L⫥` expands to `⊨===...=⫥`.
    - `⊨=R⫥` would instead expand to `⊨=⫥⫥⫥...⫥`.
