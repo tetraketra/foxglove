@@ -1,4 +1,9 @@
 SHAPE example
+---
+END
+
+
+SHAPE example
 +-----+
 | AAA |
 +-----+
@@ -8,20 +13,24 @@ END
 
 
 SHAPE example2
-+-----+
+BBBBBBB
+AA---AA
+AABBBAA
 + BBB +
-+ BBB +
 +-----+
-+ BBBB+
-+ BBBB+
-+ BBBB+
-+ BBBB+
++ BBBBB
++ BBBBB
++ BBBBB
++ BBBBB
 +-----+
 +  AA +
 +  AA +
-+     +
-+-----+
+LL    +
+LLAAAAA
+BBBBBBB
+-------
 CONFIG
 exampleParam: 1
 two: 2
 END
+

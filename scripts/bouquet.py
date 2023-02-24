@@ -3,8 +3,9 @@ import numpy as np
 import fileinput
 from more_itertools import collapse, split_at, chunked
 
+
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
-RESERVED_EXPANSION_SYMBOL = ["X"]
+RESERVED_EXPANSION_SYMBOLS = ["X"]
 
 
 
@@ -22,8 +23,8 @@ class frame():
     def __init__(self, name: str, data: np.ndarray, config: dict):
         self.name = name
         self.data = data
-        self.config = config
-        self.regions = collapse([_all_regions_of_type_from_frame_data(data, type) for type in np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)])
+        self.config = {**config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
+        self.regions = sorted(collapse([_all_regions_of_type_from_frame_data(data, type) for type in np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)]), key = lambda x: (x.type, x.start))
 
     def __repr__(self):
         return f"FRAME('{self.name}', {self.config}):\n{self.data} \n{[r for r in self.regions]}"
@@ -45,8 +46,8 @@ def file_to_frames(file_path: str) -> list[frame]:
     """
     
     bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
-    sections = (c for c in split_at(bqt_file, lambda x: x in ("END", "CONFIG"), keep_separator = False) if c != [])
-    return [frame(chunk[0][0][6:], _chunk_to_ndarray(chunk[0][1:]), _chunk_to_dict(chunk[1])) for chunk in chunked(sections, n = 2)]
+    chunks = ([*split_at(c, lambda x: x == "CONFIG")] for c in split_at(bqt_file, lambda x: x == "END") if c != [])
+    return [frame(chunk[0][0][6:], _chunk_to_ndarray(chunk[0][1:]), _chunk_to_dict(chunk[1]) if len(chunk) >= 2 else {}) for chunk in chunks]
 
 
 
@@ -76,8 +77,8 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
             if not region_topleft and data[iy, ix] == type and not in_existing_region:
                 region_topleft = (iy, ix)
             
-            elif region_topleft and data[iy, ix] != type and not in_existing_region:
-                region_width = ix - region_topleft[1]
+            elif region_topleft and (data[iy, ix] != type or ix + 1 == data.shape[1]) and not in_existing_region:
+                region_width = ix - region_topleft[1] + int(ix + 1 == data.shape[1])
                 
                 while region_height := region_height + 1:
                     if iy + 1 >= data.shape[0]: break
@@ -85,7 +86,7 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
                 break
         else:
             break
-        
+
         coords_in_region.extend((coord[0] + region_topleft[0], coord[1] + region_topleft[1]) for coord in np.ndindex(region_height, region_width))
         regions.append(region(region_topleft, (region_height, region_width), type))
 
