@@ -10,10 +10,13 @@ ted during runtime. The following characters have special meanings:
    - `A` and `B` hard cut. Printing `Hello world!` to `AAAAAA` yields `Hello `.
    - `a` and `b` soft cut. Printing `Hello world!` to `aaaaaa` yields `Hel...` by default.
    - Multi-line frames text-wrap by default. This can be altered case-by-case in code.
- - `C`|`c` is an alternative to the `AaBb` format for a multi-line list region.
- - `L`|`R`|`U`|`D` define single-character repetitions for expanding frames to variable dimensions.
+ - `L`|`l` is an alternative to the `AaBb` format for a multi-line list region.
+ - `X` is a smart division and expansion character. We call a line of Xs a "cut."
+   - Cuts must be drawn in axis lines across the canvas. These may intersect and you may have multiple in the same axis.
+   - Cuts reference the characters to their left/up to repeat the edge of a frame region to expand it to variable sizing.
+   - If you don't want vertical resizing, don't have a horizontal cut.
+   - Config in the form `X:Y:Z` can allow for biased expansion, handing out repeats in those proportions.
    - Expansions are Bouquet-only. They do not repeat printed text.
-   - `⊨=L⫥` expands to `⊨===...=⫥`.
-   - `⊨=R⫥` would instead expand to `⊨=⫥⫥⫥...⫥`.
+   - `⊨=X⫥` expands to `⊨===...=⫥`.
 
  All Bouquet files end in `.bqt`.
