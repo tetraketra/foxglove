@@ -17,6 +17,6 @@ ted during runtime. The following characters have special meanings:
    - If you don't want vertical resizing, don't have a horizontal cut.
    - Config in the form `X:Y:Z` can allow for biased expansion, handing out repeats in those proportions.
    - Expansions are Bouquet-only. They do not repeat printed text.
-   - `⊨=X⫥` expands to `⊨===...=⫥`.
+   - `╔═X╝` expands to `╔═══...═╝`.
 
  All Bouquet files end in `.bqt`.
