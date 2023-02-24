@@ -1,0 +1,27 @@
+SHAPE example
++-----+
+| AAA |
++-----+
+CONFIG
+exampleParam: 1
+END
+
+
+SHAPE example2
++-----+
++ BBB +
++ BBB +
++-----+
++ BBBB+
++ BBBB+
++ BBBB+
++ BBBB+
++-----+
++  AA +
++  AA +
++     +
++-----+
+CONFIG
+exampleParam: 1
+two: 2
+END
