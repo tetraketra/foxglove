@@ -2,7 +2,7 @@
 Foxglove is an aesthetic and highly-configurable python-based terminal rendering support library with an accompanying custom frame definition language. Consider this a personalized alternative to [Urwid](https://urwid.org) with features customized to my use cases only.
 
 ### 2. What is Bouquet? 💐 
-Bouquet is a plaintext custom frame definition language with support for variable sizing. Bouquet files ignore all standard English-language alphabetic characters `[a-z, A-Z]` except for `[AaBbCcLRUD]`, which are reserved for interpreter instructions. Bouquet intentionally requires all alphabetic characters to be inser
+Bouquet `.bqt` is a plaintext custom frame definition language with support for variable sizing. Bouquet files ignore all standard English-language alphabetic characters `[a-z, A-Z]` except for `[AaBbCcLRUD]`, which are reserved for interpreter instructions. Bouquet intentionally requires all alphabetic characters to be inser
 ted during runtime. The following characters have special meanings:
  - `A`|`a` and `B`|`b` define strictly-rectangular text regions.
    - `A`, `a`, `B`, and `b` do not connect to each other.
@@ -18,5 +18,3 @@ ted during runtime. The following characters have special meanings:
    - Config in the form `X:Y:Z` can allow for biased expansion, handing out repeats in those proportions.
    - Expansions are Bouquet-only. They do not repeat printed text.
    - `╔═X╝` expands to `╔═══...═╝`.
-
- All Bouquet files end in `.bqt`.
