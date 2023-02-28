@@ -3,7 +3,6 @@ import numpy as np
 import fileinput
 from more_itertools import collapse, split_at, chunked
 
-
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
 RESERVED_EXPANSION_SYMBOLS = ["X"]
 
@@ -24,10 +23,13 @@ class frame():
         self.name = name
         self.data = data
         self.config = {**config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
-        self.regions = sorted(collapse([_all_regions_of_type_from_frame_data(data, type) for type in np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)]), key = lambda x: (x.type, x.start))
+
+        symbols_in_frame = np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)
+        self.regions = collapse([_all_regions_of_type_from_frame_data(data, type) for type in symbols_in_frame])
+        self.regions = sorted(self.regions, key = lambda x: (x.type, x.start))
 
     def __repr__(self):
-        return f"FRAME('{self.name}', {self.config}):\n{self.data} \n{[r for r in self.regions]}"
+        return f"FRAME('{self.name}', {self.config}):\n{self.data} \n{np.array([r for r in self.regions])}"
 
     def get_param(self, param: str):
         pass #TODO: make args that should be of a particular type (e.g. int) return as such
@@ -47,7 +49,7 @@ def file_to_frames(file_path: str) -> list[frame]:
     
     bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
     chunks = ([*split_at(c, lambda x: x == "CONFIG")] for c in split_at(bqt_file, lambda x: x == "END") if c != [])
-    return [frame(chunk[0][0][6:], _chunk_to_ndarray(chunk[0][1:]), _chunk_to_dict(chunk[1]) if len(chunk) >= 2 else {}) for chunk in chunks]
+    return [frame(c[0][0][6:], _chunk_to_ndarray(c[0][1:]), _chunk_to_dict(c[1]) if len(c) >= 2 else {}) for c in chunks]
 
 
 
@@ -63,32 +65,30 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
         region_list (list[region]): List of regions found in the frame.data of a particular type.
     """    
 
-    regions = []
-    coords_in_region = []
+    regions, coords_in_regions = [], []
 
     while True:
-        region_topleft = ()
-        region_width = 0
-        region_height = 0
+        reg_wspan, reg_hspan = 0, 0
+        reg_start = ()
         
         for iy, ix in np.ndindex(data.shape):
-            in_existing_region = (iy, ix) in coords_in_region
+            in_existing_region = (iy, ix) in coords_in_regions
 
-            if not region_topleft and data[iy, ix] == type and not in_existing_region:
-                region_topleft = (iy, ix)
+            if not reg_start and data[iy, ix] == type and not in_existing_region:
+                reg_start = (iy, ix)
             
-            elif region_topleft and (data[iy, ix] != type or ix + 1 == data.shape[1]) and not in_existing_region:
-                region_width = ix - region_topleft[1] + int(ix + 1 == data.shape[1])
+            elif reg_start and (data[iy, ix] != type or ix + 1 == data.shape[1]) and not in_existing_region:
+                reg_wspan = ix - reg_start[1] + int(ix + 1 == data.shape[1])
                 
-                while region_height := region_height + 1:
+                while reg_hspan := reg_hspan + 1:
                     if iy + 1 >= data.shape[0]: break
                     if data[iy := iy + 1, ix - 1] != type: break
                 break
         else:
             break
 
-        coords_in_region.extend((coord[0] + region_topleft[0], coord[1] + region_topleft[1]) for coord in np.ndindex(region_height, region_width))
-        regions.append(region(region_topleft, (region_height, region_width), type))
+        coords_in_regions.extend((coord[0] + reg_start[0], coord[1] + reg_start[1]) for coord in np.ndindex(reg_hspan, reg_wspan))
+        regions.append(region(reg_start, (reg_hspan, reg_wspan), type))
 
     return regions
 

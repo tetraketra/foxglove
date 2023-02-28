@@ -1,19 +1,13 @@
-SHAPE example
----
-END
-
-
-SHAPE example
+FRAME example5
 +-----+
 | AAA |
 +-----+
-CONFIG
-exampleParam: 1
+| BBB |
++-----+
 END
 
-
-SHAPE example2
-BBBBBBB
+FRAME example2
+BBBBBBBS
 AA---AA
 AABBBAA
 + BBB +
