@@ -38,13 +38,13 @@ class frame():
 
 # Public Functions # ---------------------------------------------------------------
 def file_to_frames(file_path: str) -> list[frame]:
-    """Converts a `.bqt` file to a list of frame() objects.
+    """Converts a `.bqt` file to a list of `frame()` objects.
 
     Args:
         file_path (str): Absolute file path to a `.bqt` file.
 
     Returns:
-        frame_list (list[frame]): List of frame() objects.
+        frame_list (list[frame]): List of `frame()` objects.
     """
     
     bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
