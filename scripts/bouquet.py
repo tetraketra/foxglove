@@ -25,6 +25,7 @@ class region:
     dims: tuple[int, int]
     type: str
 
+
 @dataclass
 class frame:
     """
@@ -49,6 +50,7 @@ class frame:
         self.regions = sorted(self.regions, key = lambda x: itemgetter(*self.region_sort_order)(asdict(x)))
         
         self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
+
 
 
 # Public Functions # ---------------------------------------------------------------
@@ -108,6 +110,7 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
         regions.append(region(reg_start, (reg_hspan, reg_wspan), type))
 
     return regions
+
 
 def _chunk_to_ndarray(chunk: list[str]) -> np.ndarray:
     return np.array(chunk).view("U1").reshape(len(chunk), -1)
