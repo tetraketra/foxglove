@@ -30,12 +30,12 @@ class region:
 class frame:
     """
     Construct a frame object with a name, data array, and configs. Sorting defaults to
-    `("type", "pos", "dims")` order, but may be overwritten as wanted using a `tuple` of
+    `("type", "pos", "dims")` order, but may be overwritten as wanted using a tuple of
     region attribute keys.
 
     Args:
     - `name: str`, the name of the frame. Only for convenience; does nothing internally.
-    - `data: np.ndarray`, the frame's data in `U1` array format.
+    - `data: np.ndarray`, the frame's data in U1 array format.
     - `config: dict`, the optional frame config options. `fixed_size` is determined automatically.
     """    
     name: str
@@ -56,13 +56,13 @@ class frame:
 # Public Functions # ---------------------------------------------------------------
 def file_to_frames(file_path: str) -> list[frame]:
     """
-    Converts a `.bqt` file to a list of `frame` objects.
+    Converts a `.bqt` file to a list of frame objects.
 
     Args:
     - `file_path: str`, absolute file path to a `.bqt` file.
 
     Returns:
-    - `frame_list: list[frame]`, List of `frame` objects.
+    - `frame_list: list[frame]`, a list of frame objects.
     """
     
     bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
@@ -77,11 +77,11 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
     Find all regions of a type inside of a numpy array of characters. Intended for use in frame generation.
 
     Args:
-    - data (np.ndarray): The frame.data to search in.
-    - type (str): The type (reserved character) to search for a region of.
+    - `data: np.ndarray`, the frame.data to search in.
+    - `type: str`, the type (any reserved character) to search for a region of.
 
     Returns:
-    - region_list (list[region]): List of regions found in the frame.data of a particular type.
+    - `region_list: list[region]`, the list of regions found in the frame.data of a particular type.
     """    
 
     regions, coords_in_regions = [], []
