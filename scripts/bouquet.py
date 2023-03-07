@@ -65,10 +65,12 @@ def file_to_frames(file_path: str) -> list[frame]:
     - `frame_list: list[frame]`, a list of frame objects.
     """
 
+    # list of strings => list of lists of strings ("sections") => list of frames
+    # `len(c) >= 2`` accounts for config-less frames
+
     bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
-    chunks = ([*split_at(c, lambda x: x == "CONFIG")] for c in split_at(bqt_file, lambda x: x == "END") if c != [])
-    return [frame(c[0][0][6:], _strlist_to_ndarray(c[0][1:]), _strlist_to_dict(c[1]) if len(c) >= 2 else {}) for c in chunks]
-        # `len(c) >= 2`` accounts for config-less frames.
+    sections = ([*split_at(l, lambda x: x == "CONFIG")] for l in split_at(bqt_file, lambda x: x == "END") if l != [])
+    return [frame(s[0][0][6:], _strlist_to_ndarray(s[0][1:]), _strlist_to_dict(s[1]) if len(s) >= 2 else {}) for s in sections]
 
 
 
@@ -84,6 +86,12 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
     Returns:
     - `region_list: list[region]`, the list of regions found in the frame.data of a particular type.
     """
+
+    # while searching:
+    #   find an unexplored region's top-left, traverse right, then traverse down
+    #   use pos and span info to extend explored coordinates and create new region
+    #   if searched entire frame.data with no new regions:
+    #       break (stop searching)
 
     regions, coords_in_regions = [], []
 
