@@ -1,7 +1,9 @@
 # Imports & Declarations # ---------------------------------------------------------
 import numpy as np
 import fileinput
-from more_itertools import collapse, split_at, chunked
+from more_itertools import collapse, split_at
+from dataclasses import dataclass, field, asdict
+from operator import itemgetter
 
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
 RESERVED_EXPANSION_SYMBOLS = ["X"]
@@ -9,42 +11,56 @@ RESERVED_EXPANSION_SYMBOLS = ["X"]
 
 
 # Public Classes # -----------------------------------------------------------------
-class region():
-    def __init__(self, start: tuple[int, int], dims: tuple[int, int], type: str):
-        self.start = start
-        self.dims = dims
-        self.type = type
+@dataclass
+class region:
+    """
+    Constructs a frame object with position, dimensions, and type.
 
-    def __repr__(self):
-        return f"REGION({self.type} at {self.start} of size {self.dims})"
+    Args:
+    - `pos: tuple[int, int]`, the (y, x) position of the region in the frame from the frame's top-left.
+    - `dims: tuple[int, int]`, the (y, x) span of the region from its top-left.
+    - `type: str`, the region type as a member of `RESERVED_TYPE_SYMBOLS`.
+    """
+    pos: tuple[int, int]
+    dims: tuple[int, int]
+    type: str
 
-class frame():
-    def __init__(self, name: str, data: np.ndarray, config: dict):
-        self.name = name
-        self.data = data
-        self.config = {**config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
+@dataclass
+class frame:
+    """
+    Construct a frame object with a name, data array, and configs. Sorting defaults to
+    `("type", "pos", "dims")` order, but may be overwritten as wanted using a `tuple` of
+    region attribute keys.
 
+    Args:
+    - `name: str`, the name of the frame. Only for convenience; does nothing internally.
+    - `data: np.ndarray`, the frame's data in `U1` array format.
+    - `config: dict`, the optional frame config options. `fixed_size` is determined automatically.
+    """    
+    name: str
+    data: np.ndarray
+    config: dict
+    regions: region = field(init = False, repr = True)
+    region_sort_order: tuple = ("type", "pos", "dims")
+    
+    def __post_init__(self):
         symbols_in_frame = np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)
-        self.regions = collapse([_all_regions_of_type_from_frame_data(data, type) for type in symbols_in_frame])
-        self.regions = sorted(self.regions, key = lambda x: (x.type, x.start))
-
-    def __repr__(self):
-        return f"FRAME('{self.name}', {self.config}):\n{self.data} \n{np.array([r for r in self.regions])}"
-
-    def get_param(self, param: str):
-        pass #TODO: make args that should be of a particular type (e.g. int) return as such
-
+        self.regions = collapse([_all_regions_of_type_from_frame_data(self.data, type) for type in symbols_in_frame])
+        self.regions = sorted(self.regions, key = lambda x: itemgetter(*self.region_sort_order)(asdict(x)))
+        
+        self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
 
 
 # Public Functions # ---------------------------------------------------------------
 def file_to_frames(file_path: str) -> list[frame]:
-    """Converts a `.bqt` file to a list of `frame()` objects.
+    """
+    Converts a `.bqt` file to a list of `frame` objects.
 
     Args:
-        file_path (str): Absolute file path to a `.bqt` file.
+    - `file_path: str`, absolute file path to a `.bqt` file.
 
     Returns:
-        frame_list (list[frame]): List of `frame()` objects.
+    - `frame_list: list[frame]`, List of `frame` objects.
     """
     
     bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
@@ -55,14 +71,15 @@ def file_to_frames(file_path: str) -> list[frame]:
 
 # Private Functions # --------------------------------------------------------------
 def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[region]:
-    """Find all regions of a type inside of a numpy array of characters. Intended for use in frame generation.
+    """
+    Find all regions of a type inside of a numpy array of characters. Intended for use in frame generation.
 
     Args:
-        data (np.ndarray): The frame.data to search in.
-        type (str): The type (reserved character) to search for a region of.
+    - data (np.ndarray): The frame.data to search in.
+    - type (str): The type (reserved character) to search for a region of.
 
     Returns:
-        region_list (list[region]): List of regions found in the frame.data of a particular type.
+    - region_list (list[region]): List of regions found in the frame.data of a particular type.
     """    
 
     regions, coords_in_regions = [], []
