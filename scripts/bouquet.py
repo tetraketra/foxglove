@@ -65,7 +65,7 @@ def file_to_frames(file_path: str) -> list[frame]:
     - `frame_list: list[frame]`, a list of frame objects.
     """
 
-    # list of strings => list of lists of strings ("sections") => list of frames
+    # list of strings ("lines") => list of lists of strings ("sections") => list of frames
     # `len(c) >= 2`` accounts for config-less frames
 
     bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
