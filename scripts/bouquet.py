@@ -41,8 +41,8 @@ class frame:
     name: str
     data: np.ndarray
     config: dict
-    regions: region = field(init = False, repr = True)
-    region_sort_order: tuple = ("type", "pos", "dims")
+    regions: region = field(init = False, repr = True) #auto-generated
+    region_sort_order: tuple = ("type", "pos", "dims") #subset any order
     
     def __post_init__(self):
         symbols_in_frame = np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)
@@ -67,7 +67,7 @@ def file_to_frames(file_path: str) -> list[frame]:
     
     bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
     chunks = ([*split_at(c, lambda x: x == "CONFIG")] for c in split_at(bqt_file, lambda x: x == "END") if c != [])
-    return [frame(c[0][0][6:], _chunk_to_ndarray(c[0][1:]), _chunk_to_dict(c[1]) if len(c) >= 2 else {}) for c in chunks]
+    return [frame(c[0][0][6:], _strlist_to_ndarray(c[0][1:]), _strlist_to_dict(c[1]) if len(c) >= 2 else {}) for c in chunks]
 
 
 
@@ -112,7 +112,11 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
     return regions
 
 
-def _chunk_to_ndarray(chunk: list[str]) -> np.ndarray:
-    return np.array(chunk).view("U1").reshape(len(chunk), -1)
-def _chunk_to_dict(arg_list: list) -> dict:
+def _strlist_to_ndarray(strlist: list[str]) -> np.ndarray:
+    """Converts a rectangular `list[str]` to an `ndarray` of type `U1`."""
+    return np.array(strlist).view("U1").reshape(len(strlist), -1)
+
+
+def _strlist_to_dict(arg_list: list[str]) -> dict:
+    """Converts a `list[str]` of format `["arg:val", "arg2:val2", ...]` to a `dict`."""
     return {arg[0]:arg[1].strip() for arg in map(lambda x: x.split(":"), arg_list)}
