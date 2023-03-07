@@ -21,9 +21,9 @@ class region:
     - `dims: tuple[int, int]`, the (y, x) span of the region from its top-left.
     - `type: str`, the region type as a member of `RESERVED_TYPE_SYMBOLS`.
     """
+    type: str
     pos: tuple[int, int]
     dims: tuple[int, int]
-    type: str
 
 
 @dataclass
@@ -107,7 +107,7 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
             break
 
         coords_in_regions.extend((coord[0] + reg_start[0], coord[1] + reg_start[1]) for coord in np.ndindex(reg_hspan, reg_wspan))
-        regions.append(region(reg_start, (reg_hspan, reg_wspan), type))
+        regions.append(region(type, reg_start, (reg_hspan, reg_wspan)))
 
     return regions
 
