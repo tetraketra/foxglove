@@ -21,6 +21,7 @@ class region:
     - `dims: tuple[int, int]`, the (y, x) span of the region from its top-left.
     - `type: str`, the region type as a member of `RESERVED_TYPE_SYMBOLS`.
     """
+    
     type: str
     pos: tuple[int, int]
     dims: tuple[int, int]
@@ -38,6 +39,7 @@ class frame:
     - `data: np.ndarray`, the frame's data in U1 array format.
     - `config: dict`, the optional frame config options. `fixed_size` is determined automatically.
     """
+    
     name: str
     data: np.ndarray
     config: dict
