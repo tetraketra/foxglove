@@ -3,7 +3,7 @@ import bouquet as bqt
 import numpy as np
 
 # Testing # ------------------------------------------------------------------------
-a = bqt.file_to_frames(r"/home/tetraketra/Documents/GitHub/foxglove/scripts/EXAMPLE.bqt")
+a = bqt.file_to_frames(r"EXAMPLE.bqt")
 print(a[1])
 
 # If fixed size, just render in foxglove.
