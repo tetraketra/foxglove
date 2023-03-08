@@ -1,9 +1,9 @@
 # Imports & Declarations # ---------------------------------------------------------
+from dataclasses import dataclass, field, asdict
+from more_itertools import collapse, split_at
+from operator import itemgetter
 import numpy as np
 import fileinput
-from more_itertools import collapse, split_at
-from dataclasses import dataclass, field, asdict
-from operator import itemgetter
 
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
 RESERVED_EXPANSION_SYMBOLS = ["X"]
