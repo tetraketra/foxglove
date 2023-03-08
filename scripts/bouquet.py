@@ -53,6 +53,9 @@ class frame:
 
         self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
 
+    def render(self, *data) -> np.ndarray:
+        pass
+
 
 
 # Public Functions # ---------------------------------------------------------------
