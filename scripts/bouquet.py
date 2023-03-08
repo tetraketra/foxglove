@@ -2,6 +2,8 @@
 import numpy as np
 import fileinput
 from more_itertools import collapse, split_at
+from dataclasses import dataclass, field, asdict
+from operator import itemgetter
 
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
 RESERVED_EXPANSION_SYMBOLS = ["X"]
@@ -9,77 +11,103 @@ RESERVED_EXPANSION_SYMBOLS = ["X"]
 
 
 # Public Classes # -----------------------------------------------------------------
-class region():
-    def __init__(self, start: tuple[int, int], dims: tuple[int, int], type: str):
-        self.start = start
-        self.dims = dims
-        self.type = type
+@dataclass
+class region:
+    """
+    Constructs a frame object with position, dimensions, and type.
 
-    def __repr__(self):
-        return f"REGION({self.type} at {self.start} of size {self.dims})"
+    Args:
+    - `pos: tuple[int, int]`, the (y, x) position of the region in the frame from the frame's top-left.
+    - `dims: tuple[int, int]`, the (y, x) span of the region from its top-left.
+    - `type: str`, the region type as a member of `RESERVED_TYPE_SYMBOLS`.
+    """
+    type: str
+    pos: tuple[int, int]
+    dims: tuple[int, int]
 
-class frame():
-    def __init__(self, name: str, data: np.ndarray, config: dict):
-        self.name = name
-        self.data = data
-        self.config = {**config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
 
+@dataclass
+class frame:
+    """
+    Construct a frame object with a name, data array, and configs. Sorting defaults to
+    `("type", "pos", "dims")` order, but may be overwritten as wanted using a tuple of
+    region attribute keys.
+
+    Args:
+    - `name: str`, the name of the frame. Only for convenience; does nothing internally.
+    - `data: np.ndarray`, the frame's data in U1 array format.
+    - `config: dict`, the optional frame config options. `fixed_size` is determined automatically.
+    """
+    name: str
+    data: np.ndarray
+    config: dict
+    regions: region = field(init = False, repr = True) #auto-generated
+    region_sort_order: tuple = ("type", "pos", "dims") #subset any order
+
+    def __post_init__(self):
         symbols_in_frame = np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)
-        self.regions = collapse([_all_regions_of_type_from_frame_data(data, type) for type in symbols_in_frame])
-        self.regions = sorted(self.regions, key = lambda x: (x.type, x.start))
+        self.regions = collapse([_all_regions_of_type_from_frame_data(self.data, type) for type in symbols_in_frame])
+        self.regions = sorted(self.regions, key = lambda x: itemgetter(*self.region_sort_order)(asdict(x)))
 
-    def __repr__(self):
-        return f"FRAME('{self.name}', {self.config}):\n{self.data} \n{np.array([r for r in self.regions])}"
-
-    def get_param(self, param: str):
-        pass #TODO: make args that should be of a particular type (e.g. int) return as such
+        self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
 
 
 
 # Public Functions # ---------------------------------------------------------------
 def file_to_frames(file_path: str) -> list[frame]:
-    """Converts a `.bqt` file to a list of `frame()` objects.
+    """
+    Converts a `.bqt` file to a list of frame objects.
 
     Args:
-        file_path (str): Absolute file path to a `.bqt` file.
+    - `file_path: str`, absolute file path to a `.bqt` file.
 
     Returns:
-        frame_list (list[frame]): List of `frame()` objects.
+    - `frame_list: list[frame]`, a list of frame objects.
     """
-    
-    lines = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
-    chunks = ([*split_at(c, lambda x: x == "CONFIG")] for c in split_at(lines, lambda x: x == "END") if c != [])
-    return [frame(c[0][0][6:], _chunk_to_ndarray(c[0][1:]), _chunk_to_dict(c[1]) if len(c) >= 2 else {}) for c in chunks]
+
+    # list of strings ("lines") => list of lists of strings ("sections") => list of frames
+    # `len(c) >= 2`` accounts for config-less frames
+
+    bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
+    sections = ([*split_at(l, lambda x: x == "CONFIG")] for l in split_at(bqt_file, lambda x: x == "END") if l != [])
+    return [frame(s[0][0][6:], _strlist_to_ndarray(s[0][1:]), _strlist_to_dict(s[1]) if len(s) >= 2 else {}) for s in sections]
 
 
 
 # Private Functions # --------------------------------------------------------------
 def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[region]:
-    """Find all regions of a type inside of a numpy array of characters. Intended for use in frame generation.
+    """
+    Find all regions of a type inside of a numpy array of characters. Intended for use in frame generation.
 
     Args:
-        data (np.ndarray): The frame.data to search in.
-        type (str): The type (reserved character) to search for a region of.
+    - `data: np.ndarray`, the frame.data to search in.
+    - `type: str`, the type (any reserved character) to search for a region of.
 
     Returns:
-        region_list (list[region]): List of regions found in the frame.data of a particular type.
-    """    
+    - `region_list: list[region]`, the list of regions found in the frame.data of a particular type.
+    """
+
+    # while searching:
+    #   find an unexplored region's top-left, traverse right, then traverse down
+    #   use pos and span info to extend explored coordinates and create new region
+    #   if searched entire frame.data with no new regions:
+    #       break (stop searching)
 
     regions, coords_in_regions = [], []
 
     while True:
         reg_wspan, reg_hspan = 0, 0
-        reg_start = ()
-        
+        reg_pos = ()
+
         for iy, ix in np.ndindex(data.shape):
             in_existing_region = (iy, ix) in coords_in_regions
 
-            if not reg_start and data[iy, ix] == type and not in_existing_region:
-                reg_start = (iy, ix)
-            
-            elif reg_start and (data[iy, ix] != type or ix + 1 == data.shape[1]) and not in_existing_region:
-                reg_wspan = ix - reg_start[1] + int(ix + 1 == data.shape[1])
-                
+            if not reg_pos and data[iy, ix] == type and not in_existing_region:
+                reg_pos = (iy, ix)
+
+            elif reg_pos and (data[iy, ix] != type or ix + 1 == data.shape[1]) and not in_existing_region:
+                reg_wspan = ix - reg_pos[1] + int(ix + 1 == data.shape[1])
+
                 while reg_hspan := reg_hspan + 1:
                     if iy + 1 >= data.shape[0]: break
                     if data[iy := iy + 1, ix - 1] != type: break
@@ -87,12 +115,19 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
         else:
             break
 
-        coords_in_regions.extend((coord[0] + reg_start[0], coord[1] + reg_start[1]) for coord in np.ndindex(reg_hspan, reg_wspan))
-        regions.append(region(reg_start, (reg_hspan, reg_wspan), type))
+        reg_coords = ((reg_pos[0] + coord[0], reg_pos[1] + coord[1]) for coord in np.ndindex(reg_hspan, reg_wspan))
+        coords_in_regions.extend(reg_coords)
+
+        regions.append(region(type, reg_pos, (reg_hspan, reg_wspan)))
 
     return regions
 
-def _chunk_to_ndarray(chunk: list[str]) -> np.ndarray:
-    return np.array(chunk).view("U1").reshape(len(chunk), -1)
-def _chunk_to_dict(arg_list: list) -> dict:
+
+def _strlist_to_ndarray(strlist: list[str]) -> np.ndarray:
+    """Converts a rectangular `list[str]` to an `ndarray` of type `U1`."""
+    return np.array(strlist).view("U1").reshape(len(strlist), -1)
+
+
+def _strlist_to_dict(arg_list: list[str]) -> dict:
+    """Converts a `list[str]` of format `["arg:val", "arg2:val2", ...]` to a `dict`."""
     return {arg[0]:arg[1].strip() for arg in map(lambda x: x.split(":"), arg_list)}
