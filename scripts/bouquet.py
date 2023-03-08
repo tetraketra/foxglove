@@ -1,7 +1,7 @@
 # Imports & Declarations # ---------------------------------------------------------
 import numpy as np
 import fileinput
-from more_itertools import collapse, split_at, chunked
+from more_itertools import collapse, split_at
 
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
 RESERVED_EXPANSION_SYMBOLS = ["X"]
@@ -47,8 +47,8 @@ def file_to_frames(file_path: str) -> list[frame]:
         frame_list (list[frame]): List of `frame()` objects.
     """
     
-    bqt_file = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
-    chunks = ([*split_at(c, lambda x: x == "CONFIG")] for c in split_at(bqt_file, lambda x: x == "END") if c != [])
+    lines = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
+    chunks = ([*split_at(c, lambda x: x == "CONFIG")] for c in split_at(lines, lambda x: x == "END") if c != [])
     return [frame(c[0][0][6:], _chunk_to_ndarray(c[0][1:]), _chunk_to_dict(c[1]) if len(c) >= 2 else {}) for c in chunks]
 
 
