@@ -10,7 +10,7 @@ Foxglove is an aesthetic and highly-configurable python-based terminal rendering
    - `a` and `b` soft cut. Printing `Hello world!` to `aaaaaa` yields `Hel...`.
    - Multi-line regions text-wrap by default.
  - `L`|`l` is an alternative to the `AaBb` format for a multi-line list region.
- - `X` is a smart division and expansion character. We call a line of Xs a "cut."
+ - `X` is a smart division and expansion character. We call an orthogonal line of Xs a "cut."
    - Cuts must be drawn in axis lines across the canvas. These may intersect and you may have multiple in the same axis.
    - Cuts reference the characters to their left/up to repeat the edge of a frame region to expand it to variable sizing.
    - If you don't want vertical resizing, don't have a horizontal cut.
