@@ -2,16 +2,32 @@
 from dataclasses import dataclass, field, asdict
 from more_itertools import collapse, split_at
 from operator import itemgetter
+from typing import Literal
 import numpy as np
 import fileinput
 
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
 RESERVED_EXPANSION_SYMBOLS = ["X"]
-np.set_printoptions(edgeitems=30, linewidth=100000)
+#np.set_printoptions(edgeitems=30, linewidth=100000)
 
 
 
 # Public Classes # -----------------------------------------------------------------
+@dataclass
+class cut:
+    """
+    Constructs a cut object with orientation (horizontal or vertical) and weight.
+
+    Args:
+    - `orientation: Literal["Horizontal", "Vertical"]`, if the cut is horizontal 
+    (for vertical scaling) or vertical (for horizontal scaling). 
+    - `weight: int` = 1, a number determining how expanded space is handed out.
+    """
+    
+    orientation: Literal["Horizontal", "Vertical"]
+    weight: int = 1
+    
+
 @dataclass
 class region:
     """
@@ -45,8 +61,9 @@ class frame:
     data: np.ndarray
     dims: tuple[int, int] = field(init = False, repr = True) #auto-generated
     config: dict
-    regions: region = field(init = False, repr = True) #auto-generated
+    regions: region = field(init = False, repr = True) 
     region_sort_order: tuple = ("type", "pos", "dims") #subset any order
+    cuts: list[cut] = field(init = False, repr = True) 
 
     def __post_init__(self):
         symbols_in_frame = np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)
@@ -56,6 +73,8 @@ class frame:
         self.dims = self.data.shape
 
         self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
+
+        #TODO: cut auto-gen if config["fixed_size"] == False
 
     def render(self, *data) -> np.ndarray:
         pass
