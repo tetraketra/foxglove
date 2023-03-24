@@ -7,6 +7,7 @@ import fileinput
 
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
 RESERVED_EXPANSION_SYMBOLS = ["X"]
+np.set_printoptions(edgeitems=30, linewidth=100000)
 
 
 
@@ -42,6 +43,7 @@ class frame:
     
     name: str
     data: np.ndarray
+    dims: tuple[int, int] = field(init = False, repr = True) #auto-generated
     config: dict
     regions: region = field(init = False, repr = True) #auto-generated
     region_sort_order: tuple = ("type", "pos", "dims") #subset any order
@@ -50,6 +52,8 @@ class frame:
         symbols_in_frame = np.intersect1d(RESERVED_TYPE_SYMBOLS, self.data)
         self.regions = collapse([_all_regions_of_type_from_frame_data(self.data, type) for type in symbols_in_frame])
         self.regions = sorted(self.regions, key = lambda x: itemgetter(*self.region_sort_order)(asdict(x)))
+
+        self.dims = self.data.shape
 
         self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
 
@@ -92,12 +96,6 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
     - `region_list: list[region]`, the list of regions found in the frame.data of a particular type.
     """
 
-    # while searching:
-    #   find an unexplored region's top-left, traverse right, then traverse down
-    #   use pos and span info to extend explored coordinates and create new region
-    #   if searched entire frame.data with no new regions:
-    #       break (stop searching)
-
     regions, coords_in_regions = [], []
 
     while True:
@@ -109,14 +107,17 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
 
             if not reg_pos and data[iy, ix] == type and not in_existing_region:
                 reg_pos = (iy, ix)
-
-            elif reg_pos and (data[iy, ix] != type or ix + 1 == data.shape[1]) and not in_existing_region:
-                reg_wspan = ix - reg_pos[1] + int(ix + 1 == data.shape[1])
-
+                
                 while reg_hspan := reg_hspan + 1:
                     if iy + 1 >= data.shape[0]: break
-                    if data[iy := iy + 1, ix - 1] != type: break
+                    if data[iy := iy + 1, reg_pos[1]] != type: break
+
+                while reg_wspan := reg_wspan + 1:
+                    if ix + 1 >= data.shape[1]: break
+                    if data[reg_pos[0], ix := ix + 1] != type: break
+                    
                 break
+
         else:
             break
 

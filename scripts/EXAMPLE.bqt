@@ -18,3 +18,30 @@ FRAME expandBoth
 +BX++
 XXXXX
 +++++
+END
+
+FRAME expandBoth2
+++X++
++BX++
+XXXXX
+++XAA
+++XAA
+END
+
+FRAME test1
+AA+++
+AA+++
++++AA
++++AA
+END
+
+FRAME test2
+AAAA
+++++
+BBBB
+END
+
+FRAME test3
+A+B
+A+B
+A+B
