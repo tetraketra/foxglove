@@ -7,7 +7,7 @@ import numpy as np
 import fileinput
 
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
-RESERVED_EXPANSION_SYMBOLS = ["X"]
+RESERVED_EXPANSION_SYMBOL = "X"
 #np.set_printoptions(edgeitems=30, linewidth=100000)
 
 
@@ -21,11 +21,11 @@ class cut:
     Args:
     - `orientation: Literal["Horizontal", "Vertical"]`, if the cut is horizontal 
     (for vertical scaling) or vertical (for horizontal scaling). 
-    - `weight: int` = 1, a number determining how expanded space is handed out.
+    - `pos: int`, a number determining horizontal or vertical axis position.
     """
     
     orientation: Literal["Horizontal", "Vertical"]
-    weight: int = 1
+    pos: int
     
 
 @dataclass
@@ -72,9 +72,11 @@ class frame:
 
         self.dims = self.data.shape
 
-        self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOLS, self.data))}
+        self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOL, self.data))}
 
-        #TODO: cut auto-gen if config["fixed_size"] == False
+        vertical_cuts = [cut("Vertical", int(vc_pos)) for vc_pos in np.nonzero(self.data[0,:] == RESERVED_EXPANSION_SYMBOL) if vc_pos]
+        horizontal_cuts = [cut("Horizontal", int(vc_pos)) for vc_pos in np.nonzero(self.data[:,0] == RESERVED_EXPANSION_SYMBOL) if vc_pos]
+        self.cuts = vertical_cuts + horizontal_cuts
 
     def render(self, *data) -> np.ndarray:
         pass
