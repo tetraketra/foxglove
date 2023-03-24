@@ -59,10 +59,10 @@ class frame:
     
     name: str
     data: np.ndarray
-    dims: tuple[int, int] = field(init = False, repr = True) #auto-generated
     config: dict
-    regions: region = field(init = False, repr = True) 
     region_sort_order: tuple = ("type", "pos", "dims") #subset any order
+    dims: tuple[int, int] = field(init = False, repr = True) #auto-generated
+    regions: region = field(init = False, repr = True) 
     cuts: list[cut] = field(init = False, repr = True) 
 
     def __post_init__(self):
