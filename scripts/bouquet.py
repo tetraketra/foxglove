@@ -7,7 +7,7 @@ import numpy as np
 import fileinput
 
 RESERVED_TYPE_SYMBOLS = [*"AaBbLl"]
-RESERVED_EXPANSION_SYMBOL = "X"
+RESERVED_CUT_SYMBOL = "X"
 #np.set_printoptions(edgeitems=30, linewidth=100000)
 
 
@@ -72,10 +72,10 @@ class frame:
 
         self.dims = self.data.shape
 
-        self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_EXPANSION_SYMBOL, self.data))}
+        self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_CUT_SYMBOL, self.data))}
 
-        vertical_cuts = [cut("Vertical", int(vc_pos)) for vc_pos in np.nonzero(self.data[0,:] == RESERVED_EXPANSION_SYMBOL) if vc_pos]
-        horizontal_cuts = [cut("Horizontal", int(vc_pos)) for vc_pos in np.nonzero(self.data[:,0] == RESERVED_EXPANSION_SYMBOL) if vc_pos]
+        vertical_cuts = [cut("Vertical", int(vc_pos)) for vc_pos in np.nonzero(self.data[0,:] == RESERVED_CUT_SYMBOL) if vc_pos]
+        horizontal_cuts = [cut("Horizontal", int(vc_pos)) for vc_pos in np.nonzero(self.data[:,0] == RESERVED_CUT_SYMBOL) if vc_pos]
         self.cuts = vertical_cuts + horizontal_cuts
 
     def render(self, *data) -> np.ndarray:
