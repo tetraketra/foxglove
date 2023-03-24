@@ -99,7 +99,7 @@ def file_to_frames(file_path: str) -> list[frame]:
     # `len(c) >= 2`` accounts for config-less frames
 
     lines = (line for line in map(lambda x: x.strip("\n\t"), fileinput.input(file_path)) if line != "")
-    sections = ([*split_at(l, lambda x: x == "CONFIG")] for l in split_at(lines, lambda x: x == "END") if l != [])
+    sections = ([*split_at(l, lambda x: x.strip() == "CONFIG")] for l in split_at(lines, lambda x: x.strip() == "END") if l != [])
     return [frame(s[0][0][6:], _strlist_to_ndarray(s[0][1:]), _strlist_to_dict(s[1]) if len(s) >= 2 else {}) for s in sections]
 
 
