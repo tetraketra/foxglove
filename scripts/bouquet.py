@@ -196,3 +196,12 @@ def _expand(framedata: np.ndarray, framecuts: list[cut], direction: Literal["Jor
 expanded_framedata = _expand(framedata, frame_obj.cuts, "Horizontal")
 #print(frame_obj.cuts)
 print(expanded_framedata)
+
+"""
+I'll keep a running "amount left" that resets when they all run out. So imagine I've 
+handed out the first two cuts and now the running counts are 2:4:5. Divide each by the 
+number of total original weights (13) and you get 0.15:38.5:46.2. I hand out one expansion 
+to the highest-weighted cut, then recalculate and go again. This ensures that the frame 
+expands according to the weights, even if you don't expand enough to hand out a LCM of 
+expansions .
+"""
