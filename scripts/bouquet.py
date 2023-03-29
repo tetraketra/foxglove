@@ -72,10 +72,12 @@ class frame:
 
         self.dims = self.data.shape
 
-        self.config = {**self.config, "fixed_size":(not np.intersect1d(RESERVED_CUT_SYMBOL, self.data))}
+        self.config = {**self.config, "fixed_size":(not any(np.intersect1d(RESERVED_CUT_SYMBOL, self.data)))}
 
-        vertical_cuts = [cut("Vertical", int(vc_pos)) for vc_pos in np.nonzero(self.data[0,:] == RESERVED_CUT_SYMBOL) if vc_pos]
-        horizontal_cuts = [cut("Horizontal", int(vc_pos)) for vc_pos in np.nonzero(self.data[:,0] == RESERVED_CUT_SYMBOL) if vc_pos]
+        vertical_cut_positions = [i for i, x in enumerate(self.data[0,:]) if x == RESERVED_CUT_SYMBOL]
+        horizontal_cut_positions = [i for i, x in enumerate(self.data[:,0]) if x == RESERVED_CUT_SYMBOL]
+        vertical_cuts = [cut("Vertical", int(vc_pos)) for vc_pos in vertical_cut_positions]
+        horizontal_cuts = [cut("Horizontal", int(vc_pos)) for vc_pos in horizontal_cut_positions]
         self.cuts = vertical_cuts + horizontal_cuts
 
     def render(self, *data) -> np.ndarray:
@@ -150,11 +152,47 @@ def _all_regions_of_type_from_frame_data(data: np.ndarray, type: str) -> list[re
     return regions
 
 
-def _strlist_to_ndarray(strlist: list[str]) -> np.ndarray:
+def _strlist_to_ndarray(str_list: list[str]) -> np.ndarray:
     """Converts a rectangular `list[str]` to an `ndarray` of type `U1`."""
-    return np.array(strlist).view("U1").reshape(len(strlist), -1)
+    return np.array(str_list).view("U1").reshape(len(str_list), -1)
 
 
 def _strlist_to_dict(arg_list: list[str]) -> dict:
     """Converts a `list[str]` of format `["arg:val", "arg2:val2", ...]` to a `dict`."""
     return {arg[0]:arg[1].strip() for arg in map(lambda x: x.split(":"), arg_list)}
+
+
+
+######################################################################
+
+a = file_to_frames(r"EXAMPLE.bqt")
+#print(a[0])
+
+# If fixed size, just render in foxglove.
+# If not fixed size, call the frame builder during rendering to recreate regions after expanding.>
+
+frame_obj = a[1]
+framedata = a[1].data
+resize = (10, 10) # (H, W)
+#print(frame_obj)
+#print(framedata)
+
+def _plop(source_framedata: np.ndarray, target_framedata: np.ndarray, pos: tuple[int, int]) -> np.ndarray:
+    for iy, ix in np.ndindex(source_framedata.shape):
+        target_framedata[pos[0] + iy, pos[1] + ix] = source_framedata[iy, ix]
+        
+    return target_framedata
+
+framedata = _plop(framedata, np.empty((10,10), dtype = "<U1"), (0, 0))
+#print(framedata)
+
+def _expand(framedata: np.ndarray, framecuts: list[cut], direction: Literal["Jorizontal", "Vertical"]) -> np.ndarray:
+    if direction == "Horizontal":
+        v_cuts_positions = [sfc.pos for sfc in framecuts if sfc.orientation == "Horizontal"]
+        print(v_cuts_positions)
+
+    return framedata
+
+expanded_framedata = _expand(framedata, frame_obj.cuts, "Horizontal")
+#print(frame_obj.cuts)
+print(expanded_framedata)
